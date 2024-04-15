@@ -62,6 +62,25 @@ func TestGETPlayers(t *testing.T) {
 	})
 }
 
+func TestStoreWins(t *testing.T) {
+	playerStore := &StubPlayerStore{
+		map[string]int{},
+	}
+	playerServer := &PlayerServer{playerStore}
+
+	t.Run("it should return http 201 when storing a win for a given player", func(t *testing.T) {
+		// Given
+		request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", nil)
+		response := httptest.NewRecorder()
+
+		// When
+		playerServer.ServeHTTP(response, request)
+
+		// Then
+		assertEqual(t, response.Code, 201)
+	})
+}
+
 func newPlayerRequest(player string) *http.Request {
 	request, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", player), nil)
 	return request
