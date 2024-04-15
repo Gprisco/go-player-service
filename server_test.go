@@ -32,6 +32,7 @@ func TestGETPlayers(t *testing.T) {
 		playerServer.ServeHTTP(response, request)
 
 		// Then
+		assertEqual(t, response.Code, 200)
 		assertEqual(t, response.Body.String(), "20")
 	})
 
@@ -44,7 +45,20 @@ func TestGETPlayers(t *testing.T) {
 		playerServer.ServeHTTP(response, request)
 
 		// Then
+		assertEqual(t, response.Code, 200)
 		assertEqual(t, response.Body.String(), "10")
+	})
+
+	t.Run("it should return 404 when the player is not found", func(t *testing.T) {
+		// Given
+		request := newPlayerRequest("this-player-does-not-exist")
+		response := httptest.NewRecorder()
+
+		// When
+		playerServer.ServeHTTP(response, request)
+
+		// Then
+		assertEqual(t, response.Code, 404)
 	})
 }
 
@@ -53,10 +67,10 @@ func newPlayerRequest(player string) *http.Request {
 	return request
 }
 
-func assertEqual(t *testing.T, got string, want string) {
+func assertEqual[K comparable](t *testing.T, got K, want K) {
 	t.Helper()
 
 	if got != want {
-		t.Errorf("got %q, want %q", got, want)
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
