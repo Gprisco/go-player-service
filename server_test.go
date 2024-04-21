@@ -8,11 +8,16 @@ import (
 )
 
 type StubPlayerStore struct {
-	scores map[string]int
+	scores   map[string]int
+	winCalls []string
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
 	return s.scores[name]
+}
+
+func (s *StubPlayerStore) RecordWin(name string) {
+	s.winCalls = append(s.winCalls, name)
 }
 
 func TestGETPlayers(t *testing.T) {
@@ -21,6 +26,7 @@ func TestGETPlayers(t *testing.T) {
 			"Pepper": 20,
 			"Floyd":  10,
 		},
+		nil,
 	}}
 
 	t.Run("it should return Pepper's score", func(t *testing.T) {
@@ -59,6 +65,31 @@ func TestGETPlayers(t *testing.T) {
 
 		// Then
 		assertEqual(t, response.Code, 404)
+	})
+}
+
+func TestStoreWins(t *testing.T) {
+	playerStore := &StubPlayerStore{
+		map[string]int{},
+		nil,
+	}
+	playerServer := &PlayerServer{playerStore}
+
+	t.Run("it should return http 201 when storing a win for a given player", func(t *testing.T) {
+		// Given
+		player := "Pepper"
+
+		// And
+		request, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", player), nil)
+		response := httptest.NewRecorder()
+
+		// When
+		playerServer.ServeHTTP(response, request)
+
+		// Then
+		assertEqual(t, response.Code, 201)
+		assertEqual(t, len(playerStore.winCalls), 1)
+		assertEqual(t, playerStore.winCalls[0], player)
 	})
 }
 
